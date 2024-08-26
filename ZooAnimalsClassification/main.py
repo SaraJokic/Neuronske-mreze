@@ -1,7 +1,6 @@
 import keras
 import numpy as np
 import os
-from keras_preprocessing.image import ImageDataGenerator
 from keras.api.models import load_model
 from sklearn.metrics import classification_report
 

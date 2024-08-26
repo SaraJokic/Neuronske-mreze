@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 def load_data(df, img_path, img_size):
     images = []
     labels = []
-    boxes = [] #TODO: pitati saru sta sa ovim da radim:(
+    boxes = []
     for index, row in df.iterrows():
         image_path = os.path.join(img_path, row['filename'])
         img = cv2.imread(image_path)
