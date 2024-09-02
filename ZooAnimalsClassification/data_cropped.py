@@ -1,10 +1,11 @@
-import keras
+
 import numpy as np
 import pandas as pd
 import cv2
 import os
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 # Load imgs, labels and bounding boxes
 def load_data(df, img_path, img_size):
@@ -94,3 +95,32 @@ np.save('test_imgs.npy', test_imgs)
 np.save('test_labels.npy', test_labels)
 np.save('val_imgs.npy', val_imgs)
 np.save('val_labels.npy', val_labels)
+
+def plot_class_distribution(df, title):
+    class_counts = df['class'].value_counts()
+    total_images = class_counts.sum()
+    print(f'Total images in {title}: {total_images}')
+    for class_name, count in class_counts.items():
+        print(f'Class: {class_name}, Number of Images: {count}')
+
+    plt.figure(figsize=(10, 6))
+    class_counts.plot(kind='bar', color='skyblue')
+    plt.title(title)
+    plt.xlabel('Class')
+    plt.ylabel('Number of Images')
+    plt.xticks(ticks=range(len(class_counts.index)),
+               labels=[k for k, v in class_map.items() if v in class_counts.index], rotation=45)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.show()
+
+
+# Plot class distribution for training, validation, and test sets
+plot_class_distribution(train_df, 'Class Distribution in Training Set')
+plot_class_distribution(val_df, 'Class Distribution in Validation Set')
+plot_class_distribution(test_df, 'Class Distribution in Test Set')
+
+# Combined data
+combined_df = pd.concat([train_df, val_df, test_df])
+
+# Plot total class distribution
+plot_class_distribution(combined_df, 'Total Class Distribution (Train + Validation + Test)')
