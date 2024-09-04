@@ -24,19 +24,10 @@ def load_data(df, img_path, img_size):
             print(f"Empty crop for {image_path}")
             continue
 
-
-        #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) #TODO: remove ???
         img = cv2.resize(img_crop, img_size)
         images.append(img)
         labels.append(row['class'])
         boxes.append([row['xmin'], row['ymin'], row['xmax'], row['ymax']])
-
-    counter = 0
-    for imag in images:
-        counter = counter + 1
-        cv2.imwrite(f'image_{counter}.png', imag)
-        if counter == 5:
-            break
 
     images = np.array(images, dtype=np.float32) / 255.0  # Normalize images
     labels = np.array(labels)
@@ -45,28 +36,22 @@ def load_data(df, img_path, img_size):
 
 
 class_map = {'eagle': 0, 'panda': 1, 'polar-bear': 2}
-data_split = False  # TODO: Remove if rf split doesn't work still
-# If data is split
-if data_split:
-    train_df = pd.read_csv('neuronske-mreze-2/train/_annotations.csv')
-    test_df = pd.read_csv('neuronske-mreze-2/test/_annotations.csv')
-    val_df = pd.read_csv('neuronske-mreze-2/valid/_annotations.csv')
 
-    train_df['class'] = train_df['class'].map(class_map)
-    test_df['class'] = test_df['class'].map(class_map)
-    val_df['class'] = val_df['class'].map(class_map)
 
-    # Shuffle the dataframe ?? if needed
-    train_df = shuffle(train_df).reset_index(drop=True)
-    test_df = shuffle(test_df).reset_index(drop=True)
-    val_df = shuffle(val_df).reset_index(drop=True)
-else:
-    # IF DATA IS NOT SPLIT
-    df = pd.read_csv('dataset/_annotations.csv')
-    df['class'] = df['class'].map(class_map)
-    df = shuffle(df).reset_index(drop=True)
-    temp_df, test_df = train_test_split(df, test_size=0.2, stratify=df['class'], random_state=42)
-    train_df, val_df = train_test_split(temp_df, test_size=0.2, stratify=temp_df['class'], random_state=42)
+train_df = pd.read_csv('neuronske-mreze-2/train/_annotations.csv')
+test_df = pd.read_csv('neuronske-mreze-2/test/_annotations.csv')
+val_df = pd.read_csv('neuronske-mreze-2/valid/_annotations.csv')
+
+
+train_df['class'] = train_df['class'].map(class_map)
+test_df['class'] = test_df['class'].map(class_map)
+val_df['class'] = val_df['class'].map(class_map)
+
+# Shuffle the dataframe ?? if needed
+train_df = shuffle(train_df).reset_index(drop=True)
+test_df = shuffle(test_df).reset_index(drop=True)
+val_df = shuffle(val_df).reset_index(drop=True)
+
 
 image_size = (224, 224)
 train_imgs, train_labels, train_boxes = load_data(train_df, 'dataset', image_size)
@@ -88,7 +73,7 @@ print(val_df['class'].value_counts())
 print("\nClass distribution in test set:")
 print(test_df['class'].value_counts())
 
-# Save for training (for google colab) TODO:in directory
+# Save for training (for google colab)
 np.save('train_imgs.npy', train_imgs)
 np.save('train_labels.npy', train_labels)
 np.save('test_imgs.npy', test_imgs)
