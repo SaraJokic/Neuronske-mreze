@@ -1,10 +1,11 @@
-import keras
+
 import numpy as np
 import pandas as pd
 import cv2
 import os
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 # Load imgs, labels and bounding boxes
 def load_data(df, img_path, img_size):
@@ -23,19 +24,10 @@ def load_data(df, img_path, img_size):
             print(f"Empty crop for {image_path}")
             continue
 
-
-        #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) #TODO: remove ???
         img = cv2.resize(img_crop, img_size)
         images.append(img)
         labels.append(row['class'])
         boxes.append([row['xmin'], row['ymin'], row['xmax'], row['ymax']])
-
-    counter = 0
-    for imag in images:
-        counter = counter + 1
-        cv2.imwrite(f'image_{counter}.png', imag)
-        if counter == 5:
-            break
 
     images = np.array(images, dtype=np.float32) / 255.0  # Normalize images
     labels = np.array(labels)
@@ -44,28 +36,22 @@ def load_data(df, img_path, img_size):
 
 
 class_map = {'eagle': 0, 'panda': 1, 'polar-bear': 2}
-data_split = False  # TODO: Remove if rf split doesn't work still
-# If data is split
-if data_split:
-    train_df = pd.read_csv('neuronske-mreze-2/train/_annotations.csv')
-    test_df = pd.read_csv('neuronske-mreze-2/test/_annotations.csv')
-    val_df = pd.read_csv('neuronske-mreze-2/valid/_annotations.csv')
 
-    train_df['class'] = train_df['class'].map(class_map)
-    test_df['class'] = test_df['class'].map(class_map)
-    val_df['class'] = val_df['class'].map(class_map)
 
-    # Shuffle the dataframe ?? if needed
-    train_df = shuffle(train_df).reset_index(drop=True)
-    test_df = shuffle(test_df).reset_index(drop=True)
-    val_df = shuffle(val_df).reset_index(drop=True)
-else:
-    # IF DATA IS NOT SPLIT
-    df = pd.read_csv('dataset/_annotations.csv')
-    df['class'] = df['class'].map(class_map)
-    df = shuffle(df).reset_index(drop=True)
-    temp_df, test_df = train_test_split(df, test_size=0.2, stratify=df['class'], random_state=42)
-    train_df, val_df = train_test_split(temp_df, test_size=0.2, stratify=temp_df['class'], random_state=42)
+train_df = pd.read_csv('neuronske-mreze-2/train/_annotations.csv')
+test_df = pd.read_csv('neuronske-mreze-2/test/_annotations.csv')
+val_df = pd.read_csv('neuronske-mreze-2/valid/_annotations.csv')
+
+
+train_df['class'] = train_df['class'].map(class_map)
+test_df['class'] = test_df['class'].map(class_map)
+val_df['class'] = val_df['class'].map(class_map)
+
+# Shuffle the dataframe ?? if needed
+train_df = shuffle(train_df).reset_index(drop=True)
+test_df = shuffle(test_df).reset_index(drop=True)
+val_df = shuffle(val_df).reset_index(drop=True)
+
 
 image_size = (224, 224)
 train_imgs, train_labels, train_boxes = load_data(train_df, 'dataset', image_size)
@@ -87,10 +73,39 @@ print(val_df['class'].value_counts())
 print("\nClass distribution in test set:")
 print(test_df['class'].value_counts())
 
-# Save for training (for google colab) TODO:in directory
+# Save for training (for google colab)
 np.save('train_imgs.npy', train_imgs)
 np.save('train_labels.npy', train_labels)
 np.save('test_imgs.npy', test_imgs)
 np.save('test_labels.npy', test_labels)
 np.save('val_imgs.npy', val_imgs)
 np.save('val_labels.npy', val_labels)
+
+def plot_class_distribution(df, title):
+    class_counts = df['class'].value_counts()
+    total_images = class_counts.sum()
+    print(f'Total images in {title}: {total_images}')
+    for class_name, count in class_counts.items():
+        print(f'Class: {class_name}, Number of Images: {count}')
+
+    plt.figure(figsize=(10, 6))
+    class_counts.plot(kind='bar', color='skyblue')
+    plt.title(title)
+    plt.xlabel('Class')
+    plt.ylabel('Number of Images')
+    plt.xticks(ticks=range(len(class_counts.index)),
+               labels=[k for k, v in class_map.items() if v in class_counts.index], rotation=45)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.show()
+
+
+# Plot class distribution for training, validation, and test sets
+plot_class_distribution(train_df, 'Class Distribution in Training Set')
+plot_class_distribution(val_df, 'Class Distribution in Validation Set')
+plot_class_distribution(test_df, 'Class Distribution in Test Set')
+
+# Combined data
+combined_df = pd.concat([train_df, val_df, test_df])
+
+# Plot total class distribution
+plot_class_distribution(combined_df, 'Total Class Distribution (Train + Validation + Test)')
