@@ -37,21 +37,17 @@ def load_data(df, img_path, img_size):
 
 class_map = {'eagle': 0, 'panda': 1, 'polar-bear': 2}
 
-
-train_df = pd.read_csv('neuronske-mreze-2/train/_annotations.csv')
-test_df = pd.read_csv('neuronske-mreze-2/test/_annotations.csv')
-val_df = pd.read_csv('neuronske-mreze-2/valid/_annotations.csv')
-
-
-train_df['class'] = train_df['class'].map(class_map)
-test_df['class'] = test_df['class'].map(class_map)
-val_df['class'] = val_df['class'].map(class_map)
+# IF DATA IS NOT SPLIT
+df = pd.read_csv('dataset/_annotations.csv')
+df['class'] = df['class'].map(class_map)
+df = shuffle(df).reset_index(drop=True)
+temp_df, test_df = train_test_split(df, test_size=0.2, stratify=df['class'], random_state=42)
+train_df, val_df = train_test_split(temp_df, test_size=0.2, stratify=temp_df['class'], random_state=42)
 
 # Shuffle the dataframe ?? if needed
 train_df = shuffle(train_df).reset_index(drop=True)
 test_df = shuffle(test_df).reset_index(drop=True)
 val_df = shuffle(val_df).reset_index(drop=True)
-
 
 image_size = (224, 224)
 train_imgs, train_labels, train_boxes = load_data(train_df, 'dataset', image_size)
